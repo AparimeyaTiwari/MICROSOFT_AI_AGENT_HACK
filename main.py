@@ -12,6 +12,7 @@ from io import BytesIO
 import PyPDF2
 import requests
 import uuid
+from os import environ
 
 # Load environment variables
 load_dotenv()
@@ -20,6 +21,24 @@ load_dotenv()
 kernel = None
 gmaps = None
 
+@cl.password_auth_callback
+def auth_callback(username: str, password: str):
+    username_stored = environ.get("CHAINTLIT_USERNAME")
+    password_stored = environ.get("CHAINTLIT_PASSWORD")
+
+    if username_stored is None or password_stored is None:
+        raise ValueError(
+            "Username or password not set. Please set CHAINTLIT_USERNAME and "
+            "CHAINTLIT_PASSWORD environment variables."
+        )
+
+    if (username, password) == (username_stored, password_stored):
+        return cl.User(
+            identifier="admin", metadata={"role": "admin", "provider": "credentials"}
+        )
+    else:
+        return None
+    
 language_map = {
     'hi': 'Hindi',
     'mr': 'Marathi',
