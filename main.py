@@ -1,4 +1,7 @@
 import chainlit as cl
+from chainlit import run_sync
+from chainlit.element import Element
+from chainlit.types import AskSpec
 import os
 from dotenv import load_dotenv
 from semantic_kernel import Kernel
@@ -13,6 +16,8 @@ import PyPDF2
 import requests
 import uuid
 from os import environ
+from typing import List, Dict, Any
+from datetime import datetime
 
 # Load environment variables
 load_dotenv()
@@ -21,24 +26,7 @@ load_dotenv()
 kernel = None
 gmaps = None
 
-@cl.password_auth_callback
-def auth_callback(username: str, password: str):
-    username_stored = environ.get("CHAINTLIT_USERNAME")
-    password_stored = environ.get("CHAINTLIT_PASSWORD")
-
-    if username_stored is None or password_stored is None:
-        raise ValueError(
-            "Username or password not set. Please set CHAINTLIT_USERNAME and "
-            "CHAINTLIT_PASSWORD environment variables."
-        )
-
-    if (username, password) == (username_stored, password_stored):
-        return cl.User(
-            identifier="admin", metadata={"role": "admin", "provider": "credentials"}
-        )
-    else:
-        return None
-    
+# initialize translator key and endpoint
 language_map = {
     'hi': 'Hindi',
     'mr': 'Marathi',
@@ -65,9 +53,9 @@ language_map = {
     'sat': 'Santali',
 }
 
-key = "7oOd359wYDvLZkGPy6rhbgCKBWmfiNDxbjnSHEEaxmGxgxIFCqY2JQQJ99BDACGhslBXJ3w3AAAbACOGsJTd"
-endpoint = "https://api.cognitive.microsofttranslator.com/"
-region = "centralindia"
+key = os.getenv("TRANSLATOR_KEY")
+endpoint = os.getenv("TRANSLATOR_ENDPOINT")
+region = os.getenv("TRANSLATOR_REGION")
 
 headers = {
     'Ocp-Apim-Subscription-Key': key,
@@ -76,24 +64,42 @@ headers = {
     'X-ClientTraceId': str(uuid.uuid4())
 }
 
+@cl.password_auth_callback
+def auth_callback(username: str, password: str):
+    username_stored = environ.get("CHAINTLIT_USERNAME")
+    password_stored = environ.get("CHAINTLIT_PASSWORD")
+
+    if username_stored is None or password_stored is None:
+        raise ValueError(
+            "Username or password not set. Please set CHAINTLIT_USERNAME and "
+            "CHAINTLIT_PASSWORD environment variables."
+        )
+
+    if (username, password) == (username_stored, password_stored):
+        return cl.User(
+            identifier="admin", metadata={"role": "admin", "provider": "credentials"}
+        )
+    else:
+        return None
+
 async def detect_and_translate_to_english (text):
     # Step 1: Detect Language
-        detect_url = f"{endpoint.rstrip('/')}/detect?api-version=3.0"
-        body = [{'Text': text}]
-        detect_response = requests.post(detect_url, headers=headers, json=body)
-        detect_response.raise_for_status()
-        detected_lang = detect_response.json()[0]['language']
-        detected_language_name = language_map.get(detected_lang, detected_lang)
-        print(f"🕵️ Detected Language: {detected_lang} ({detected_language_name})")
+    detect_url = f"{endpoint.rstrip('/')}/detect?api-version=3.0"
+    body = [{'Text': text}]
+    detect_response = requests.post(detect_url, headers=headers, json=body)
+    detect_response.raise_for_status()
+    detected_lang = detect_response.json()[0]['language']
+    detected_language_name = language_map.get(detected_lang, detected_lang)
+    print(f"🕵️ Detected Language: {detected_lang} ({detected_language_name})")
 
-        # Step 2: Translate to English
-        translate_to_english_url = f"{endpoint.rstrip('/')}/translate?api-version=3.0&from={detected_lang}&to=en"
-        translate_response = requests.post(translate_to_english_url, headers=headers, json=body)
-        translate_response.raise_for_status()
-        english_text = translate_response.json()[0]['translations'][0]['text']
-        print("🔠 Translated to English:", english_text)
-        translated = english_text 
-        return translated, detected_lang# notice: returning 3 values
+    # Step 2: Translate to English
+    translate_to_english_url = f"{endpoint.rstrip('/')}/translate?api-version=3.0&from={detected_lang}&to=en"
+    translate_response = requests.post(translate_to_english_url, headers=headers, json=body)
+    translate_response.raise_for_status()
+    english_text = translate_response.json()[0]['translations'][0]['text']
+    # print("🔠 Translated to English:", english_text)
+    translated = english_text 
+    return translated, detected_lang
 
 async def translate_back_to_original(english_text, original_lang_code):
     body_back = [{'Text': english_text}]
@@ -101,8 +107,7 @@ async def translate_back_to_original(english_text, original_lang_code):
     translate_back_response = requests.post(translate_back_url, headers=headers, json=body_back)
     translate_back_response.raise_for_status()
     back_translated_text = translate_back_response.json()[0]['translations'][0]['text']
-    print("🔁 Back-Translated to Original:", back_translated_text)
-
+    # print("🔁 Back-Translated to Original:", back_translated_text)
     return back_translated_text
 
 @cl.on_chat_start
@@ -120,14 +125,15 @@ async def initialize_chat():
         )
     )
     
-
     # Initialize plugins
     legal_plugin = kernel.add_plugin(plugin_name="LegalAgents", parent_directory="plugins")
     location_plugin = kernel.add_plugin(plugin_name="LocationAgent", parent_directory="plugins")
     
+    # Initialize session state
     cl.user_session.set("legal_plugin", legal_plugin)
     cl.user_session.set("location_plugin", location_plugin)
     cl.user_session.set("chat_history", [])
+    cl.user_session.set("session_start", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     
     # Initialize Google Maps client
     gmaps = googlemaps.Client(key=os.getenv("GOOGLE_MAPS_API_KEY"))
@@ -242,25 +248,6 @@ async def get_user_location(message: str) -> str:
 
     # 3. Manual fallback
     return await manual_location_fallback()
-
-
-async def detect_location_from_ip() -> Optional[str]:
-    """Attempts location detection via IP address"""
-    try:
-        ip = cl.user_session.get("client").get("host")
-        if ip not in ["127.0.0.1", "::1"]:
-            response = requests.get(
-                f"https://ipinfo.io/{ip}?token={os.getenv('IPINFO_TOKEN')}",
-                timeout=3
-            )
-            if response.status_code == 200 and "loc" in response.json():
-                data = response.json()
-                await cl.Message(content=f"📍 IP detected location: {data.get('city', 'Unknown')}").send()
-                return data["loc"]
-    except Exception as e:
-        print(f"IP detection error: {e}")
-    return None
-
 
 async def analyze_document(file: cl.File) -> str:
     """
@@ -410,13 +397,17 @@ async def get_lawyer_recommendations(coords: str, lawyer_type: str) -> str:
 
 @cl.on_message
 async def handle_message(message: cl.Message):
-    # Update chat history
-    chat_history = cl.user_session.get("chat_history")
-    chat_history.append(f"User: {message.content}")
-    cl.user_session.set("chat_history", chat_history)
-
+    # Get current chat history
+    chat_history: List[Dict[str, Any]] = cl.user_session.get("chat_history", [])
     
-    # Handle file attachments
+    # Add user message to history
+    chat_history.append({
+        "role": "user",
+        "content": message.content,
+        "timestamp": datetime.now().strftime("%H:%M:%S")
+    })
+    
+    # Handle file attachments (keep your existing file handling code)
     if message.elements:
         processing_msg = await cl.Message(content="📄 Analyzing document...").send()
         analyses = []
@@ -426,9 +417,15 @@ async def handle_message(message: cl.Message):
                 analyses.append(analysis)
         
         if analyses:
-            # Create a new message with the results instead of updating
+            # Add analysis to history
+            chat_history.append({
+                "role": "assistant",
+                "content": "\n\n".join(analyses),
+                "timestamp": datetime.now().strftime("%H:%M:%S")
+            })
+            
             await cl.Message(content="\n\n".join(analyses)).send()
-            await processing_msg.remove()  # Remove the processing message
+            await processing_msg.remove()
             return
     
     # Process text query
@@ -437,16 +434,34 @@ async def handle_message(message: cl.Message):
     try:
         translated_text, langd = await detect_and_translate_to_english(message.content)
         legal_plugin = cl.user_session.get("legal_plugin")
-
-        # Get location-aware legal advice
+        
+        # Get the last 3 messages for context
+        context_messages = [
+            msg["content"] for msg in chat_history[-3:] 
+            if msg["role"] == "user" or msg["role"] == "assistant"
+        ]
+        context = "\n".join(context_messages)
+        
+        # Get location-aware legal advice with context
         user_location = await get_user_location(translated_text)
         advice = await kernel.invoke(
             legal_plugin["legal_advisor"], 
-            arguments=KernelArguments(query=translated_text)
+            arguments=KernelArguments(
+                query=translated_text,
+                chat_history=context  # Pass chat history as context
+            )
         )
         advice_text = str(advice).strip()
-        trans_op = await translate_back_to_original(advice_text,langd) 
-        # Check if lawyer is needed
+        trans_op = await translate_back_to_original(advice_text, langd)
+        
+        # Add assistant response to history
+        chat_history.append({
+            "role": "assistant",
+            "content": trans_op,
+            "timestamp": datetime.now().strftime("%H:%M:%S")
+        })
+        
+        # Check if lawyer is needed (keep your existing lawyer recommendation code)
         needs_lawyer = await kernel.invoke(
             legal_plugin["lawyer_needed"],
             arguments=KernelArguments(
@@ -463,20 +478,27 @@ async def handle_message(message: cl.Message):
             )
             lawyer_type = str(lawyer_type).strip()
             
-            # Stream tokens instead of updating
-            final_content = f"\n\n⚖️ Recommended: {lawyer_type} lawyer"
             lawyers = await get_lawyer_recommendations(user_location, lawyer_type)
-           
+            final_content = f"\n\n⚖️ Recommended: {lawyer_type} lawyer"
             final_content += f"\n\n## Legal Advice\n{trans_op}\n\n## Local {lawyer_type} Lawyers\n{lawyers}"
+            
+            # Update the final message in history
+            chat_history[-1]["content"] = final_content
             await processing_msg.stream_token(final_content)
         else:
-            # Create new message instead of updating
             await cl.Message(content=f"✅ Advice:\n{trans_op}").send()
             await processing_msg.remove()
             
+        # Update the chat history in session
+        cl.user_session.set("chat_history", chat_history)
+            
     except Exception as e:
-        await cl.Message(content=f"❌ Processing error: {str(e)}").send()
+        error_msg = f"❌ Processing error: {str(e)}"
+        chat_history.append({
+            "role": "assistant",
+            "content": error_msg,
+            "timestamp": datetime.now().strftime("%H:%M:%S")
+        })
+        cl.user_session.set("chat_history", chat_history)
+        await cl.Message(content=error_msg).send()
         await processing_msg.remove()
-
-# Language code to name mapping
-
