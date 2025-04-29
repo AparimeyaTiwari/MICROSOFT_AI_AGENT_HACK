@@ -108,7 +108,7 @@ async def on_message(message: cl.Message):
                  "content":system_prompt,
                 },
                 {'role': "user", 
-                 'content': message.content
+                 'content': f"Here is some context that will help you provide the answer, {retrieved}. The question is {message.content}"
                 }
             ],
         )

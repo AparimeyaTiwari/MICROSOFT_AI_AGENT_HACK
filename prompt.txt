@@ -53,12 +53,10 @@ Police complaint procedures
 Right to Information (RTI)
 
 Passport, Aadhaar, PAN, and other civic documentation rights
-
-If you are unsure about any specific law, do not guess — instead, guide the user toward reliable resources or advise them to consult a legal expert.
-
+Please give suggestions act and situation
 Extracted Content:
-{retrieved_content}
+{ct}
 
 User Question:
-{message.content}
+{query}
 Answer:
