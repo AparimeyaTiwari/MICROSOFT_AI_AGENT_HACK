@@ -106,18 +106,41 @@ LAWGIC leverages **Semantic Kernel** to orchestrate specialized plugins that wor
 Before running the system, configure the following:
 
 ```env
-AZURE_CV_ENDPOINT=<your_computer_vision_endpoint>
-AZURE_CV_KEY=<your_computer_vision_key>
-AZURE_TRANSLATOR_KEY=<your_translator_key>
-AZURE_TRANSLATOR_ENDPOINT=<your_translator_endpoint>
-AZURE_TRANSLATOR_REGION=<your_translator_region>
-AZURE_OPENAI_KEY=<your_openai_key>
-AZURE_OPENAI_ENDPOINT=<your_openai_endpoint>
-AZURE_OPENAI_DEPLOYMENT=<your_openai_deployment_name>
-AZURE_AI_SEARCH_ENDPOINT=<your_ai_search_endpoint>
-AZURE_AI_SEARCH_KEY=<your_ai_search_key>
-AZURE_BLOB_CONNECTION_STRING=<your_blob_storage_key>
-GOOGLE_MAPS_API_KEY=<your_google_maps_key>
+# Azure AI Search
+AZURE_SEARCH_ENDPOINT="https://<your-search-resource>.search.windows.net"
+AZURE_SEARCH_API_KEY="<your-azure-search-api-key>"
+AZURE_SEARCH_INDEX_NAME_1="azureblob-index"
+AZURE_SEARCH_INDEX_NAME_2="azureblob-index-2"
+AZURE_SEARCH_INDEX_NAME_3="azureblob-index-3"
+
+# Azure OpenAI (LLM)
+AZURE_OPENAI_ENDPOINT="https://<your-openai-resource>.openai.azure.com/"
+AZURE_OPENAI_API_KEY="<your-azure-openai-key>"
+AZURE_OPENAI_DEPLOYMENT_NAME="gpt-4o"
+AZURE_OPENAI_API_VERSION="2025-01-01-preview"
+
+# Azure OpenAI (Embeddings)
+EMBEDDING_EP="https://<your-openai-resource>.openai.azure.com/openai/deployments/text-embedding-ada-002/embeddings?api-version=2023-05-15"
+KEY="<your-embedding-api-key>"
+EMB_DEPLOY="text-embedding-ada-002"
+
+# Azure Translator
+TRANSLATOR_KEY="<your-translator-key>"
+TRANSLATOR_REGION="centralindia"
+TRANSLATOR_ENDPOINT="https://api.cognitive.microsofttranslator.com/"
+
+# Google Maps API
+GOOGLE_MAPS_API_KEY="<your-google-maps-api-key>"
+
+# Chainlit Authentication
+CHAINLIT_AUTH_SECRET="<your-chainlit-auth-secret>"
+OAUTH_GOOGLE_CLIENT_ID="<your-google-client-id>"
+OAUTH_GOOGLE_CLIENT_SECRET="<your-google-client-secret>"
+CHAINLIT_URL="http://localhost:8000"
+
+# Optional: Plugin Info Token
+PINFO_TOKEN="<your-plugin-info-token>"
+
 ```
 
 ---
