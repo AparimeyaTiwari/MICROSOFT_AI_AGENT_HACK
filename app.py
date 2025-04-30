@@ -1,24 +1,45 @@
-from flask import Flask, request, render_template
-from translator import detect_and_translate_to_english, translate_back_to_original
+from azure.cognitiveservices.vision.computervision import ComputerVisionClient
+from azure.cognitiveservices.vision.computervision.models import OperationStatusCodes
+from msrest.authentication import CognitiveServicesCredentials
 
-app = Flask(__name__)
+from dotenv import load_dotenv
+import os
+import time
 
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    detected_language = ""
-    english_text = ""
-    back_translated_text = ""
-    
-    if request.method == 'POST':
-        input_text = request.form.get('text', '')
-        if input_text.strip():
-            detected_language, english_text, detected_lang_code = detect_and_translate_to_english(input_text)
-            back_translated_text = translate_back_to_original(english_text, detected_lang_code)
-    
-    return render_template('index.html',
-                           detected_language=detected_language,
-                           english_text=english_text,
-                           back_translated_text=back_translated_text)
+# Load credentials from .env file
+load_dotenv()
+subscription_key = os.getenv("VISION_KEY")
+endpoint = os.getenv("VISION_ENDPOINT")
 
-if __name__ == '__main__':
-    app.run(debug=True)
+# Authenticate
+computervision_client = ComputerVisionClient(endpoint, CognitiveServicesCredentials(subscription_key))
+
+# === Get file path from user ===
+file_path = input("Enter the path to your local PDF or image file: ").strip()
+
+# Ensure file exists
+if not os.path.isfile(file_path):
+    print(f"File not found: {file_path}")
+    exit(1)
+
+print("===== Reading File (Local) =====")
+with open(file_path, "rb") as local_file:
+    read_response = computervision_client.read_in_stream(local_file, raw=True)
+
+# Get the operation location (used to get result later)
+read_operation_location = read_response.headers["Operation-Location"]
+operation_id = read_operation_location.split("/")[-1]
+
+# Poll for the result
+while True:
+    read_result = computervision_client.get_read_result(operation_id)
+    if read_result.status not in ['notStarted', 'running']:
+        break
+    time.sleep(1)
+
+# Print results
+if read_result.status == OperationStatusCodes.succeeded:
+    for page in read_result.analyze_result.read_results:
+        for line in page.lines:
+            print(line.text)
+
