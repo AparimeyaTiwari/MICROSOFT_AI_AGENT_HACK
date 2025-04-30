@@ -13,7 +13,7 @@ LAWGIC is a modular, multilingual AI-powered legal assistant built specifically 
 6. [Setup & Development](#-setup--development)
 7. [Usage Guide](#-usage-guide)
 8. [What's Next?](#-whats-next)
-9. [Attribution](#-attribution)
+9. [Working Video](#-Working-Video)
 10. [Contact](#-contact)
 
 ---
@@ -182,16 +182,18 @@ chainlit run main.py --port 8000
 
 ---
 
-## 🤝 Attribution
-- **Icons & Assets**: Lucide, Freepik, Flaticon
-- **Libraries & Frameworks**: Chainlit, Azure SDKs, Semantic Kernel, OpenAI
-- **Contributors**: Team LAWGIC
+## 🤝 Working Video
+- Link: 
+
 
 ---
 
 ## 📬 Contact
 Have questions or want to collaborate?
-- Reach out at: [lawgic.team@yourdomain.com](mailto:lawgic.team@yourdomain.com)
+- Aparimeya Tiwari: https://www.linkedin.com/in/aparimeya-tiwari-76a252252/
+- Vinayak Khavare: https://www.linkedin.com/in/vinayak-khavare-542821257/
+- Richa Rathi: https://www.linkedin.com/in/richa-rathi-775871257/
+- Sahil Adit: https://www.linkedin.com/in/sahiladit/
 
 **Note**: LAWGIC is a legal assistive tool. For serious or critical legal matters, always consult a licensed attorney.
 
