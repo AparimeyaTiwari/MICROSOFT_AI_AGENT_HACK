@@ -1,6 +1,6 @@
 # LAWGIC ⚖️ – AI-Powered Indian Legal Law Agent
 
-LAWGIC is a modular, multilingual AI-powered legal assistant built specifically for the Indian legal ecosystem. Designed with accessibility and clarity in mind, LAWGIC helps users understand, query, and navigate legal documents and laws. Whether you're reading a lease agreement, seeking clarity on IPC sections, or looking for a lawyer nearby, LAWGIC simplifies the experience with natural language and smart retrieval.
+LAWGIC is a modular, multilingual AI-powered legal assistant built specifically for the Indian legal ecosystem. Designed with accessibility and clarity, LAWGIC helps users understand, query, and navigate legal documents and laws. Whether you're reading a lease agreement, seeking clarity on IPC sections, or looking for a lawyer nearby, LAWGIC simplifies the experience with natural language and smart retrieval.
 
 ---
 
@@ -13,8 +13,8 @@ LAWGIC is a modular, multilingual AI-powered legal assistant built specifically 
 6. [Setup & Development](#-setup--development)
 7. [Usage Guide](#-usage-guide)
 8. [What's Next?](#-whats-next)
-9. [Working Video](#-Working-Video)
-10. [Contact](#-contact)
+9. [Demonstration](#-Demonstration)
+11. [Contact](#-contact)
 
 ---
 
@@ -205,7 +205,7 @@ chainlit run main.py --port 8000
 
 ---
 
-## 🤝 Working Video
+## 🤝 Demonstration
 - Link: 
 
 
