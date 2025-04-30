@@ -1,137 +1,194 @@
-# 🇮🇳 LAWGIC – Indian Legal Law Agent
+# LAWGIC ⚖️ – AI-Powered Indian Legal Law Agent
 
-**LAWGIC** is an intelligent, multimodal legal assistant tailored for the Indian legal ecosystem. It combines Azure’s AI capabilities, OpenAI’s LLMs, and geolocation services to simplify access to legal support across formats, languages, and regions. Whether it’s understanding a scanned legal document or finding the nearest lawyer — LAWGIC has you covered.
+LAWGIC is a modular, multilingual AI-powered legal assistant built specifically for the Indian legal ecosystem. Designed with accessibility and clarity in mind, LAWGIC helps users understand, query, and navigate legal documents and laws. Whether you're reading a lease agreement, seeking clarity on IPC sections, or looking for a lawyer nearby, LAWGIC simplifies the experience with natural language and smart retrieval.
 
 ---
 
-## ❓ Why LAWGIC?
-
-India’s legal system is vast and multifaceted — accessible primarily to those well-versed in English or legal jargon. LAWGIC is designed to break the barriers of:
-
-- **Language Diversity**: Most citizens prefer regional languages, while legal documents are often in English or Hindi.
-- **Limited Legal Awareness**: Legal procedures and documents are not easy to interpret for the common public.
-- **Geographic Constraints**: Professional legal help isn't uniformly available across rural and remote areas.
-- **Document Accessibility**: Legal resources often exist as scanned files, making searchability and comprehension difficult.
-
-LAWGIC provides a unified solution to these challenges by using AI to enable multimodal, multilingual, and location-aware access to legal information.
+## 📑 Table of Contents
+1. [Key Features](#-key-features)
+2. [Modular Plugins with Semantic Kernel](#-modular-plugins-with-semantic-kernel)
+3. [Architecture Overview](#-architecture-overview)
+4. [Software Stack](#-software-stack)
+5. [Environment Variables](#-environment-variables)
+6. [Setup & Development](#-setup--development)
+7. [Usage Guide](#-usage-guide)
+8. [What's Next?](#-whats-next)
+9. [Attribution](#-attribution)
+10. [Contact](#-contact)
 
 ---
 
 ## 🧩 Key Features
 
-### 🧑‍⚖️ Multimodal Legal Query Input
-- Accepts **text** input directly via a clean UI built using **Chainlit**.
-- Accepts **files** such as images or PDFs; uses **Azure Computer Vision OCR** to extract text.
-- Future-ready for **voice input** using **Azure Speech Services (TTS)**.
+### 📁 Multi-Modal Input
+- Accepts **text**, **PDF**, **images**, and soon **speech input**.
+- Uses **Azure Computer Vision OCR** to extract text from uploaded files.
+- Supports input in **any Indian or global language**.
 
-### 🌐 Multilingual Translation Support
-- Input can be in **any Indian language**.
-- Translated to **English** using **Azure Translator** before processing.
-- The final legal response is **translated back into the original language**.
+### 🌐 Multilingual Translation
+- Automatically detects the input language.
+- Translates to **English** using **Azure Translator** for internal processing.
+- Final output is translated **back to the original language** for user-friendly delivery.
 
-### 🧠 AI-Powered Legal Reasoning
-- The translated query is **embedded into a vector**.
-- Compared semantically with indexed legal PDFs (stored in **Azure Blob**) using **Azure AI Search**.
-- Relevant content is retrieved and passed to **Azure OpenAI's LLM** for precise legal answers.
-- Output is **translated back** to the original input language and displayed on the UI.
+### 🧠 AI-Powered Legal Insights
+- Translated input is vectorized and compared with **Azure AI Search indexes**.
+- Legal documents are stored in **Azure Blob Storage**, indexed semantically.
+- Retrieved content is passed to **Azure OpenAI LLM** for legal reasoning and answer generation.
+- Ensures accuracy and context relevance by grounding answers in legal documents.
 
-### 📍 Find Nearby Lawyers
-- Supports 3 types of location input:
-  - **IP address**
-  - **Geocode** (latitude and longitude)
-  - **Manual entry** (city/state)
-- Uses the **Google Maps API** to fetch and display nearby legal professionals.
+### 📍 Nearby Legal Help
+- Provides a list of **nearby lawyers** using **Google Maps API**.
+- Supports three location modes: `IP Address`, `Geocode`, and `Manual Input`.
 
 ---
 
 ## 🧠 Modular Plugins with Semantic Kernel
+LAWGIC leverages **Semantic Kernel** to orchestrate specialized plugins that work together to fulfill complex legal tasks.
 
-LAWGIC uses **Semantic Kernel** to orchestrate three core modular plugins that handle all the functionality in a clean and extendable architecture:
+### 🔁 Translator Plugin
+- Handles **language detection** and **bi-directional translation** (Input to English, Output to Original).
+- Uses **Azure Translator** under the hood.
 
-### 1. 🈂️ Translator Plugin
-**Purpose**: Enables multilingual interaction.
+### ⚖️ Lawyer AI Plugin
+- Converts translated query to vector using **Azure OpenAI Embeddings**.
+- Searches semantic index from **Azure AI Search** linked to PDFs in **Azure Blob**.
+- Sends retrieved context to **Azure LLM** (ChatGPT) to generate an accurate, grounded legal response.
 
-**Responsibilities**:
-- Detects language of user input.
-- Translates to English before semantic embedding.
-- Translates final output from English back to the original input language.
-
-**Powered By**:
-- Azure Translator
-- Semantic Kernel orchestration
-
----
-
-### 2. 📄 Lawyer AI Plugin
-**Purpose**: Powers the core legal intelligence.
-
-**Responsibilities**:
-- Converts the translated query into a vector.
-- Compares it against legal document indexes created from PDFs in Azure Blob via **Azure AI Search**.
-- Passes matched content (context) to **Azure OpenAI LLM**.
-- Generates a clear, accurate legal explanation or answer.
-
-**Powered By**:
-- Azure Cognitive Search (vector index)
-- Azure Blob Storage (legal PDFs)
-- Azure OpenAI (LLM)
-- Semantic Kernel (query + context prompting)
+### 📍 Nearby Lawyers Plugin
+- Processes user’s IP, geocode, or manual input to determine location.
+- Fetches relevant legal professionals nearby via **Google Maps API**.
+- Presents result directly in the Chainlit UI.
 
 ---
 
-### 3. 📍 Nearby Lawyers Plugin
-**Purpose**: Connects users with nearby lawyers.
+## 🏗️ Architecture Overview
 
-**Responsibilities**:
-- Accepts IP, geocode, or manual location input.
-- Queries **Google Maps API** to fetch lawyer data.
-- Returns names, contact info, and directions to local legal professionals.
+### Input Handling:
+- `Text`, `Image`, and `PDF` inputs → processed using **Azure Computer Vision**.
+- Optional: Future integration with **Azure Speech-to-Text**.
 
-**Powered By**:
-- Google Maps API
-- Geolocation tools
-- Semantic Kernel (handles input mapping and output formatting)
+### Processing Pipeline:
+1. Extracted/typed input is translated to English.
+2. Query is converted to vector using Azure Embeddings.
+3. Azure AI Search compares it to document indexes.
+4. Top-matching content passed to Azure LLM.
+5. Answer generated and translated back to original language.
 
----
-
-### 🔄 Semantic Kernel Orchestration
-
-- Each plugin is **independently callable**, promoting modularity and ease of maintenance.
-- Semantic Kernel handles the flow from **input → translation → embedding → LLM reasoning → final translation/output**.
-- Allows future addition of plugins like:
-  - Court Status Checker
-  - Document Summarizer
-  - Live Chat with Legal Experts
+### Output:
+- Delivered in native language.
+- Cleanly presented via **Chainlit UI**.
 
 ---
 
-## 🧠 System Architecture
+## 🖥️ Software Stack
 
-```text
-User Input (Text / File / Future: Voice)
-        ↓
-If File → OCR via Azure Computer Vision → Extracted Text
-        ↓
-Azure Translator → English Translation
-        ↓
-→ Translator Plugin (Semantic Kernel)
-        ↓
-Vector Embedding of Query
-        ↓
-→ Azure AI Search Indexes (Linked to PDFs in Azure Blob Storage)
-        ↓
-→ Lawyer Plugin (Semantic Kernel)
-        ↓
-Relevant Context → Azure OpenAI LLM → Legal Output
-        ↓
-Azure Translator → Back to Original Language
-        ↓
-→ Displayed on Chainlit UI
+### Frontend:
+- **Chainlit** (Python-based UI)
 
-(Parallel optional process)
-        ↓
-Nearby Lawyers Plugin (Semantic Kernel)
-        ↓
-→ Google Maps API (IP / Geocode / Manual Input)
-        ↓
-→ List of Lawyers Based on Location
+### Backend & AI Orchestration:
+- **Python**
+- **Semantic Kernel (Plugins + Planner)**
+- **Azure OpenAI Service** (Embeddings + LLM)
+- **Azure Computer Vision** (OCR)
+- **Azure Translator** (Language Translation)
+- **Google Maps API** (Nearby Lawyer Search)
+
+### Storage:
+- **Azure Blob Storage** (Legal Document PDFs)
+- **Azure AI Search** (Indexing & Semantic Search)
+
+---
+
+## 🔧 Environment Variables
+Before running the system, configure the following:
+
+```env
+AZURE_CV_ENDPOINT=<your_computer_vision_endpoint>
+AZURE_CV_KEY=<your_computer_vision_key>
+AZURE_TRANSLATOR_KEY=<your_translator_key>
+AZURE_TRANSLATOR_ENDPOINT=<your_translator_endpoint>
+AZURE_TRANSLATOR_REGION=<your_translator_region>
+AZURE_OPENAI_KEY=<your_openai_key>
+AZURE_OPENAI_ENDPOINT=<your_openai_endpoint>
+AZURE_OPENAI_DEPLOYMENT=<your_openai_deployment_name>
+AZURE_AI_SEARCH_ENDPOINT=<your_ai_search_endpoint>
+AZURE_AI_SEARCH_KEY=<your_ai_search_key>
+AZURE_BLOB_CONNECTION_STRING=<your_blob_storage_key>
+GOOGLE_MAPS_API_KEY=<your_google_maps_key>
+```
+
+---
+
+## 🛠️ Setup & Development
+
+### Prerequisites:
+- Python >= 3.10
+- Azure resources (OpenAI, Computer Vision, Translator, AI Search, Blob Storage)
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/your-org/lawgic.git
+cd lawgic
+```
+
+### 2. Create & Activate Virtual Environment
+```bash
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+### 3. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Setup Environment Variables
+- Create a `.env` file using the template and insert your Azure & Google credentials.
+
+### 5. Run the App
+```bash
+chainlit run main.py --port 8000
+```
+
+---
+
+## 🚀 Usage Guide
+
+### Step 1: Input Your Query
+- Upload a document OR type your legal question.
+- Supports Indian languages and English.
+
+### Step 2: Let LAWGIC Analyze
+- Text is extracted (if needed) and translated.
+- Semantic search locates relevant laws.
+- Azure LLM generates an appropriate legal response.
+
+### Step 3: Get Results
+- The answer is translated back to your preferred language.
+- Displayed with legal references (if available).
+- Use the **Nearby Lawyer** button to find help locally.
+
+---
+
+## 📌 What's Next?
+- Voice input using Azure Speech (STT).
+- Voice output for better accessibility.
+- User profiles for history and saved queries.
+- Role-based filters for specific legal domains.
+- Public-facing legal FAQ database with AI curation.
+
+---
+
+## 🤝 Attribution
+- **Icons & Assets**: Lucide, Freepik, Flaticon
+- **Libraries & Frameworks**: Chainlit, Azure SDKs, Semantic Kernel, OpenAI
+- **Contributors**: Team LAWGIC
+
+---
+
+## 📬 Contact
+Have questions or want to collaborate?
+- Reach out at: [lawgic.team@yourdomain.com](mailto:lawgic.team@yourdomain.com)
+
+**Note**: LAWGIC is a legal assistive tool. For serious or critical legal matters, always consult a licensed attorney.
+
